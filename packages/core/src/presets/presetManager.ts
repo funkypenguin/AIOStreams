@@ -28,6 +28,7 @@ import { StarWarsUniversePreset } from './starWarsUniverse.js';
 import { DebridioTvdbPreset } from './debridioTvdb.js';
 import { DcUniversePreset } from './dcUniverse.js';
 import { DebridioTvPreset } from './debridioTv.js';
+import { DebridioIC4APreset } from './debridioIc4a.js';
 import { TorrentCatalogsPreset } from './torrentCatalogs.js';
 import { StreamingCatalogsPreset } from './streamingCatalogs.js';
 import { AnimeCatalogsPreset } from './animeCatalogs.js';
@@ -67,6 +68,7 @@ import { SootioPreset } from './sootio.js';
 import { TorrentGalaxyPreset } from './torrentGalaxy.js';
 import { UsenetStreamerPreset } from './usenetStreamer.js';
 import { NekoBtPreset } from './nekoBt.js';
+import { EasynewsSearchPreset } from './easynewsSearch.js';
 
 let PRESET_LIST: string[] = [
   'custom',
@@ -101,6 +103,7 @@ let PRESET_LIST: string[] = [
   'easynews',
   'easynewsPlus',
   'easynewsPlusPlus',
+  'easynews-search',
   'usenet-streamer',
   'dmm-cast',
   'nuvio-streams',
@@ -114,6 +117,7 @@ let PRESET_LIST: string[] = [
   'tmdb-addon',
   'debridio-tmdb',
   'debridio-tvdb',
+  'debridio-ic4a',
   'streaming-catalogs',
   'anime-catalogs',
   'torrent-catalogs',
@@ -190,6 +194,8 @@ export class PresetManager {
         return DebridioTmdbPreset;
       case 'debridio-tvdb':
         return DebridioTvdbPreset;
+      case 'debridio-ic4a':
+        return DebridioIC4APreset;
       case 'aiostreams':
         return AIOStreamsPreset;
       case 'opensubtitles':
@@ -288,6 +294,8 @@ export class PresetManager {
         return TorrentGalaxyPreset;
       case 'usenet-streamer':
         return UsenetStreamerPreset;
+      case 'easynews-search':
+        return EasynewsSearchPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }

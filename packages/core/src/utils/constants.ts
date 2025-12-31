@@ -22,6 +22,7 @@ export enum ErrorCode {
   RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
   BAD_REQUEST = 'BAD_REQUEST',
   UNAUTHORIZED = 'UNAUTHORIZED',
+  FORBIDDEN = 'FORBIDDEN',
 }
 
 interface ErrorDetails {
@@ -94,6 +95,10 @@ export const ErrorMap: Record<ErrorCode, ErrorDetails> = {
     statusCode: 401,
     message: 'Unauthorized',
   },
+  [ErrorCode.FORBIDDEN]: {
+    statusCode: 403,
+    message: 'Forbidden',
+  },
 };
 
 export class APIError extends Error {
@@ -120,6 +125,8 @@ export const INTERNAL_SECRET_HEADER = Buffer.from(
   'WC1BSU9TdHJlYW1zLUludGVybmFsLVNlY3JldA==',
   'base64'
 ).toString('utf8');
+
+export const PUBLIC_NZB_PROXY_USERNAME = 'public_nzb_proxy_user';
 
 const API_VERSION = 1;
 
@@ -238,6 +245,7 @@ export const BUILTIN_SUPPORTED_SERVICES = [
   NZBDAV_SERVICE,
   ALTMOUNT_SERVICE,
   STREMIO_NNTP_SERVICE,
+  EASYNEWS_SERVICE,
 ] as const;
 
 export type ServiceId = (typeof SERVICES)[number];
@@ -757,11 +765,8 @@ export const AUTO_PLAY_ATTRIBUTES = [
   'size',
 ] as const;
 
-const NON_DEFAULT_AUTO_PLAY_ATTRIBUTES = ['infoHash', 'size', 'type', 'addon'];
-
-export const DEFAULT_AUTO_PLAY_ATTRIBUTES = AUTO_PLAY_ATTRIBUTES.filter(
-  (attribute) => !NON_DEFAULT_AUTO_PLAY_ATTRIBUTES.includes(attribute)
-);
+export const DEFAULT_AUTO_PLAY_ATTRIBUTES: (typeof AUTO_PLAY_ATTRIBUTES)[number][] =
+  ['resolution', 'quality', 'releaseGroup'] as const;
 
 export const AUTO_PLAY_METHODS = [
   'matchingFile',
@@ -830,6 +835,7 @@ const VISUAL_TAGS = [
   'HDR10',
   'DV',
   'HDR',
+  'HLG',
   '10bit',
   '3D',
   'IMAX',
@@ -844,6 +850,7 @@ const AUDIO_TAGS = [
   'Atmos',
   'DD+',
   'DD',
+  'DTS:X',
   'DTS-HD MA',
   'DTS-HD',
   'DTS-ES',
@@ -856,6 +863,19 @@ const AUDIO_TAGS = [
 ] as const;
 
 const AUDIO_CHANNELS = ['2.0', '5.1', '6.1', '7.1', 'Unknown'] as const;
+
+// Passthrough stages that can be selectively bypassed
+const PASSTHROUGH_STAGES = [
+  'filter', // bypass main filtering (shouldKeepStream)
+  'dedup', // bypass deduplication
+  'limit', // bypass result limiting
+  'excluded', // bypass excluded stream expressions
+  'required', // bypass required stream expressions
+  'title', // bypass title matching
+  'year', // bypass year matching
+  'episode', // bypass season/episode matching
+  'digitalRelease', // bypass early digital release filter
+] as const;
 
 const ENCODES = [
   'AV1',
@@ -1081,8 +1101,7 @@ export const SORT_CRITERIA_DETAILS: Record<
     defaultDirection: 'desc',
     description:
       'Whether the stream is a SeaDex release (curated best anime releases from releases.moe)',
-    ascendingDescription:
-      'Streams that are not listed on SeaDex are preferred',
+    ascendingDescription: 'Streams that are not listed on SeaDex are preferred',
     descendingDescription:
       'Streams that are marked as the Best release on SeaDex are preferred, followed by the Alternative release',
   },
@@ -1275,6 +1294,7 @@ export {
   AUDIO_TAGS,
   AUDIO_CHANNELS,
   ENCODES,
+  PASSTHROUGH_STAGES,
   SORT_CRITERIA,
   SORT_DIRECTIONS,
   STREAM_TYPES,
