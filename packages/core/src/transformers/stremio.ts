@@ -239,6 +239,15 @@ export class StremioTransformer {
       data: { streams, statistics },
       errors,
     } = response;
+    const disabledStreamTypes = new Set(
+      (Env.DISABLED_STREAM_TYPES || '')
+        .split(',')
+        .map((type) => type.trim())
+        .filter(Boolean)
+    );
+    const filteredStreams = disabledStreamTypes.size
+      ? streams.filter((stream) => !disabledStreamTypes.has(stream.type))
+      : streams;
     const { provideStreamData, disableAutoplay } = options ?? {};
 
     let transformedStreams: AIOStream[] = [];
@@ -246,7 +255,7 @@ export class StremioTransformer {
     const start = Date.now();
 
     transformedStreams = await Promise.all(
-      streams.map((stream: ParsedStream, index: number) =>
+      filteredStreams.map((stream: ParsedStream, index: number) =>
         this.convertParsedStreamToStream(
           stream,
           formatter,
@@ -258,7 +267,7 @@ export class StremioTransformer {
     );
 
     logger.info(
-      `Transformed ${streams.length} streams using ${this.userData.formatter.id} formatter in ${getTimeTakenSincePoint(start)}`
+      `Transformed ${filteredStreams.length} streams using ${this.userData.formatter.id} formatter in ${getTimeTakenSincePoint(start)}`
     );
 
     // add errors to the end (if this.userData.hideErrors is false  or the resource is not in this.userData.hideErrorsForResources)
